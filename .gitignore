@@ -1,13 +1,26 @@
+# 환경 변수
 .env
 
 # Python 가상 환경
 venv/
 .venv/
 
-# Python 캐시
+# 캐시
 __pycache__/
+.pytest_cache/
 *.pyc
+.ivy2/
+.m2/
 
 # IDE/Editor 설정 파일
 .vscode/
 .idea/
+
+# 로컬 S3(데이터 레이크)
+minio_data/
+
+# airflow의 메타데이터 데이터베이스
+postgres_data/
+
+# 로그
+logs/

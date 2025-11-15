@@ -25,3 +25,103 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
+    container_name: minio
+    ports:
+      - "9000:9000"  # MinIO API/UI 포트
+      - "9001:9001"  # MinIO Console 포트
+    volumes:
+      - ./minio_data:/data # 로컬 폴더에 데이터를 영구 저장
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    command: server /data --console-address ":9001"
+
+  # airflow 
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow # 1번에서 만든 Dockerfile 사용
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - _AIRFLOW_UID=50000
+      - _AIRFLOW_GID=0
+    command: >
+      bash -c "
+      airflow db init;
+      airflow users create -r Admin -u airflow -p airflow -e admin@example.com -f admin -l user;
+      "
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow # 1번에서 만든 Dockerfile 사용
+    restart: always
+    depends_on:
+      - airflow-init
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - _AIRFLOW_UID=${_AIRFLOW_UID:-50000}
+      - _AIRFLOW_GID=${_AIRFLOW_GID:-0}
+    command: airflow webserver
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow # 1번에서 만든 Dockerfile 사용
+    restart: always
+    depends_on:
+      - airflow-init
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - _AIRFLOW_UID=${_AIRFLOW_UID:-50000}
+      - _AIRFLOW_GID=${_AIRFLOW_GID:-0}
+    command: airflow scheduler

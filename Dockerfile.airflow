@@ -1,0 +1,12 @@
+# 1. Airflow 공식 이미지를 기반으로 합니다.
+FROM apache/airflow:2.8.1
+
+# 2. apt-get을 업데이트하고 Java(JDK)를 설치합니다.
+USER root
+RUN apt-get update \
+    && apt-get install -y openjdk-17-jre-headless \
+    && apt-get clean
+USER airflow
+
+# 3. Airflow가 MinIO/S3 및 Spark와 통신하는 데 필요한 라이브러리를 설치합니다.
+RUN pip install --no-cache-dir boto3 minio pyspark==3.5.7

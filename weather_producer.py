@@ -27,9 +27,10 @@ def get_base_time():
     """기상청 API가 요구하는 base_date와 base_time을 생성합니다."""
 
     now = datetime.datetime.now()
-    # 초단기실황은 매시 30분에 생성되어 40분부터 제공됩니다.
-    # 40분 이전에는 이전 시간의 데이터를 요청해야 합니다.
-    if now.minute < 40:
+    
+    # 초단기실황은 정각에 생성되고, 10분 이후에 제공됩니다.
+    # 10분 이전에는 이전 시간의 데이터를 요청해야 합니다.
+    if now.minute < 10:
         target_time = now - datetime.timedelta(hours=1)
     else:
         target_time = now
