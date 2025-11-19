@@ -1,19 +1,22 @@
 import os
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
+
+load_dotenv()
 
 # --- 설정 ---
 KAFKA_BOOTSTRAP_SERVERS = 'localhost:9092'
 POWER_TOPIC = 'power_demand_realtime'
 WEATHER_TOPIC = 'weather_realtime'
 
-MINIO_ENDPOINT = "http://localhost:9000"
-MINIO_ACCESS_KEY = "minioadmin" 
-MINIO_SECRET_KEY = "minioadmin" 
-BUCKET_NAME = "power-lake"
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+REGION = "ap-northeast-2"
 
-# 1. Spark-S3(MinIO) 연동 드라이버 설정
+# 1. Spark-S3 연동 드라이버 설정
 HADOOP_AWS_JAR = "org.apache.hadoop:hadoop-aws:3.3.4"
 AWS_SDK_JAR = "com.amazonaws:aws-java-sdk-bundle:1.12.262"
 
@@ -32,20 +35,19 @@ WEATHER_SCHEMA = StructType([
 ])
 
 def create_spark_session():
-    """MinIO(S3) 접속 설정이 포함된 Spark Session을 생성합니다."""
+    """S3 접속 설정이 포함된 Spark Session을 생성"""
 
     return SparkSession.builder \
-        .appName("KafkaToMinIO") \
+        .appName("KafkaToS3") \
         .config("spark.jars.packages", f"{HADOOP_AWS_JAR},{AWS_SDK_JAR},org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.7") \
-        .config("spark.hadoop.fs.s3a.endpoint", MINIO_ENDPOINT) \
-        .config("spark.hadoop.fs.s3a.access.key", MINIO_ACCESS_KEY) \
-        .config("spark.hadoop.fs.s3a.secret.key", MINIO_SECRET_KEY) \
-        .config("spark.hadoop.fs.s3a.path.style.access", "true") \
+        .config("spark.hadoop.fs.s3a.access.key", AWS_ACCESS_KEY) \
+        .config("spark.hadoop.fs.s3a.secret.key", AWS_SECRET_KEY) \
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{REGION}.amazonaws.com") \
         .getOrCreate()
 
 def start_stream(spark, topic_name, schema, output_path):
-    """지정된 토픽에서 데이터를 읽어 MinIO로 저장하는 스트림을 시작합니다."""
+    """지정된 토픽에서 데이터를 읽어 S3로 저장하는 스트림을 시작합니다."""
 
     # 1. Kafka 토픽에서 데이터 스트림 읽기
     df = spark.readStream \
@@ -60,7 +62,7 @@ def start_stream(spark, topic_name, schema, output_path):
         .select(from_json(col("json_string"), schema).alias("data")) \
         .select("data.*")
 
-    # 3. 데이터를 Parquet 형식으로 MinIO에 쓰기
+    # 3. 데이터를 Parquet 형식으로 S3에 쓰기
     query = parsed_df.writeStream \
         .format("parquet") \
         .outputMode("append") \

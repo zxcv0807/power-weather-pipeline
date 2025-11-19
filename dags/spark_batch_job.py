@@ -3,29 +3,27 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, date_trunc, avg, max
 from pyspark.sql.types import TimestampType
 
-# MinIO/S3 설정
-MINIO_ENDPOINT = "http://minio:9000"
-MINIO_ACCESS_KEY = "minioadmin"
-MINIO_SECRET_KEY = "minioadmin"
-BUCKET_NAME = "power-lake"
+# S3 설정
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+REGION = "ap-northeast-2"
 
 # S3 연동 드라이버
 HADOOP_AWS_JAR = "org.apache.hadoop:hadoop-aws:3.3.4"
 AWS_SDK_JAR = "com.amazonaws:aws-java-sdk-bundle:1.12.262"
 
 def create_spark_session():
-    """MinIO(S3) 접속 설정이 포함된 Spark Session을 생성합니다."""
+    """S3 접속 설정이 포함된 Spark Session을 생성합니다."""
     
-    # Airflow 컨테이너에서 실행되므로, winutils.exe가 필요 없는 local[*] 모드로 실행
     return SparkSession.builder \
         .appName("DailyBatchAnalysis") \
         .master("local[*]") \
         .config("spark.jars.packages", f"{HADOOP_AWS_JAR},{AWS_SDK_JAR}") \
-        .config("spark.hadoop.fs.s3a.endpoint", MINIO_ENDPOINT) \
-        .config("spark.hadoop.fs.s3a.access.key", MINIO_ACCESS_KEY) \
-        .config("spark.hadoop.fs.s3a.secret.key", MINIO_SECRET_KEY) \
-        .config("spark.hadoop.fs.s3a.path.style.access", "true") \
+        .config("spark.hadoop.fs.s3a.access.key", AWS_ACCESS_KEY) \
+        .config("spark.hadoop.fs.s3a.secret.key", AWS_SECRET_KEY) \
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{REGION}.amazonaws.com") \
         .getOrCreate()
 
 def main():
@@ -61,13 +59,10 @@ def main():
         max("rainfall_mm").alias("max_rainfall_mm")
     )
 
-    # 5. 분석 결과(Warehouse)를 MinIO에 저장
+    # 5. 분석 결과(Warehouse)를 S3에 저장
     # Parquet으로 저장하며, 덮어쓰기(overwrite) 모드 사용
     output_path = f"s3a://{BUCKET_NAME}/warehouse/hourly_summary"
-    analysis_df.write \
-        .mode("overwrite") \
-        .format("parquet") \
-        .save(output_path)
+    analysis_df.write.mode("overwrite").format("parquet").save(output_path)
 
     print(f"Batch analysis complete. Data saved to {output_path}")
     spark.stop()

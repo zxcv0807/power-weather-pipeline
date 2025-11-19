@@ -26,6 +26,23 @@ services:
 ```
 여기서 Airflow 컨테이너가 http://minio:9000 으로 요청을 보내면, Docker 네트워크는 "아, minio는 저기 MiniO 컨테이너를 말하는구나"라고 알아듣고 자동으로 트래픽을 올바른 컨테이너로 연결해준다.
 
+## .master("local[*]")
+
+spark_batch_job.py 파일에서 create_spark_session() 함수에서 아래의 코드가 있다.
+```python
+return SparkSession.builder \
+        .appName("DailyBatchAnalysis") \
+        .master("local[*]") \
+        .config("spark.jars.packages", f"{HADOOP_AWS_JAR},{AWS_SDK_JAR}") \
+        .config("spark.hadoop.fs.s3a.access.key", AWS_ACCESS_KEY) \
+        .config("spark.hadoop.fs.s3a.secret.key", AWS_SECRET_KEY) \
+        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{REGION}.amazonaws.com") \
+        .getOrCreate()
+```
+위 코드에서 .master("local[*]") 에서 '*'의 의미는 CPU 코어(스레드)를 몇 개를 쓸지에 대한 설정이다.
+local[2]는 CPU 코어 2개, local[*]는 local의 모든 CPU 코어를 사용해서 최대한 빠르게 처리한다는 의미이다.
+
 
 ## Trouble Shooting
 

@@ -8,5 +8,8 @@ RUN apt-get update \
     && apt-get clean
 USER airflow
 
+# JAVA_HOME 환경변수 설정
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
 # 3. Airflow가 MinIO/S3 및 Spark와 통신하는 데 필요한 라이브러리를 설치합니다.
 RUN pip install --no-cache-dir boto3 minio pyspark==3.5.7
