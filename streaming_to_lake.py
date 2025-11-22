@@ -65,9 +65,9 @@ def start_stream(spark, topic_name, schema, output_path):
     # 3. 데이터를 Parquet 형식으로 S3에 쓰기
     # 파티션 컬럼 생성 (base_datetime을 기준으로 연/월/일 추출)
     partitioned_df = parsed_df \
-        .withColumn("year", year(to_timestamp(col("base_datetime"), "yyyyMMddHHmm"))) \
-        .withColumn("month", month(to_timestamp(col("base_datetime"), "yyyyMMddHHmm"))) \
-        .withColumn("day", dayofmonth(to_timestamp(col("base_datetime"), "yyyyMMddHHmm")))
+        .withColumn("year", year(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss"))) \
+        .withColumn("month", month(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss"))) \
+        .withColumn("day", dayofmonth(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss")))
     
     query = partitioned_df.writeStream \
         .format("parquet") \
