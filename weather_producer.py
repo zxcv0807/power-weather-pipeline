@@ -57,7 +57,7 @@ def fetch_weather_data():
     }
 
     try:
-        response = requests.get(WEATHER_API_URL, params=params, timeout=10)
+        response = requests.get(WEATHER_API_URL, params=params, timeout=120)
         response.raise_for_status()
         data = response.json()
 

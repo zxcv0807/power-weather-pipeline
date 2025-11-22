@@ -28,7 +28,7 @@ def fetch_power_data():
     }
 
     try:
-        response = requests.get(API_URL, params=params, timeout=10)
+        response = requests.get(API_URL, params=params, timeout=120)
         response.raise_for_status()
         
         # 1. XML 파싱 시작
