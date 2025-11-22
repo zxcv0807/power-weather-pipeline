@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import from_json, col, to_timestamp, year, month, dayofmonth, hour
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
 
 load_dotenv()
@@ -63,9 +63,16 @@ def start_stream(spark, topic_name, schema, output_path):
         .select("data.*")
 
     # 3. 데이터를 Parquet 형식으로 S3에 쓰기
-    query = parsed_df.writeStream \
+    # 파티션 컬럼 생성 (base_datetime을 기준으로 연/월/일 추출)
+    partitioned_df = parsed_df \
+        .withColumn("year", year(to_timestamp(col("base_datetime"), "yyyyMMddHHmm"))) \
+        .withColumn("month", month(to_timestamp(col("base_datetime"), "yyyyMMddHHmm"))) \
+        .withColumn("day", dayofmonth(to_timestamp(col("base_datetime"), "yyyyMMddHHmm")))
+    
+    query = partitioned_df.writeStream \
         .format("parquet") \
         .outputMode("append") \
+        .partitionBy("year", "month", "day") \
         .option("path", f"s3a://{BUCKET_NAME}/{output_path}") \
         .option("checkpointLocation", f"s3a://{BUCKET_NAME}/checkpoints/{output_path}") \
         .start()
