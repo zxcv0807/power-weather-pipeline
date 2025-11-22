@@ -43,6 +43,12 @@ return SparkSession.builder \
 위 코드에서 .master("local[*]") 에서 '*'의 의미는 CPU 코어(스레드)를 몇 개를 쓸지에 대한 설정이다.
 local[2]는 CPU 코어 2개, local[*]는 local의 모든 CPU 코어를 사용해서 최대한 빠르게 처리한다는 의미이다.
 
+### Cluster Mode
+현재 `local[*]`은 단일 컴퓨터의 자원만 사용하는 방식이다.
+하지만 데이터가 수백 GB 만큼 커지게 되면, 단일 컴퓨터의 메모리 한계로 인해 Out Of Memory 오류가 발생하게 될 것이다.
+
+이 때는 **YARN**이나 **Kubernetes**를 Master로 지정하여 작업을 쪼개, 수십~수백 대의 서버에 분산시켜 수평 확장(Scale-Out)을 하여 단일 컴퓨터 자원의 한계를 해결해야 한다.
+
 
 ## Trouble Shooting
 

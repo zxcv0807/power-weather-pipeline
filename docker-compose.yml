@@ -26,19 +26,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
 
-  minio:
-    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
-    container_name: minio
-    ports:
-      - "9000:9000"  # MinIO API/UI 포트
-      - "9001:9001"  # MinIO Console 포트
-    volumes:
-      - ./minio_data:/data # 로컬 폴더에 데이터를 영구 저장
-    environment:
-      MINIO_ROOT_USER: "minioadmin"
-      MINIO_ROOT_PASSWORD: "minioadmin"
-    command: server /data --console-address ":9001"
-
   # airflow 
   postgres:
     image: postgres:13

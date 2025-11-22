@@ -20,6 +20,8 @@ def create_spark_session():
         .appName("DailyBatchAnalysis") \
         .master("local[*]") \
         .config("spark.jars.packages", f"{HADOOP_AWS_JAR},{AWS_SDK_JAR}") \
+        .config("spark.driver.memory", "512m") \
+        .config("spark.executor.memory", "512m") \
         .config("spark.hadoop.fs.s3a.access.key", AWS_ACCESS_KEY) \
         .config("spark.hadoop.fs.s3a.secret.key", AWS_SECRET_KEY) \
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
