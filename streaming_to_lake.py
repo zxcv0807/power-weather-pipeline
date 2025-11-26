@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, to_timestamp, year, month, dayofmonth, hour
+from pyspark.sql.functions import from_json, col, substring
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
 
 load_dotenv()
@@ -65,9 +65,9 @@ def start_stream(spark, topic_name, schema, output_path):
     # 3. 데이터를 Parquet 형식으로 S3에 쓰기
     # 파티션 컬럼 생성 (base_datetime을 기준으로 연/월/일 추출)
     partitioned_df = parsed_df \
-        .withColumn("year", year(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss"))) \
-        .withColumn("month", month(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss"))) \
-        .withColumn("day", dayofmonth(to_timestamp(col("base_datetime"), "yyyyMMddHHmmss")))
+        .withColumn("year", substring(col("base_datetime"), 1, 4)) \
+        .withColumn("month", substring(col("base_datetime"), 5, 2)) \
+        .withColumn("day", substring(col("base_datetime"), 7, 2))
     
     query = partitioned_df.writeStream \
         .format("parquet") \
