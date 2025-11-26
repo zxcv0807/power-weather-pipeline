@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, date_trunc, avg, max, lit
+from pyspark.sql.functions import col, date_trunc, avg, max, lit, to_timestamp
 from pyspark.sql.types import TimestampType
 
 # S3 설정
@@ -19,10 +19,11 @@ def create_spark_session():
     
     return SparkSession.builder \
         .appName("DailyBatchAnalysis") \
-        .master("local[*]") \
+        .master("local[1]") \
         .config("spark.jars.packages", f"{HADOOP_AWS_JAR},{AWS_SDK_JAR}") \
         .config("spark.driver.memory", "512m") \
         .config("spark.executor.memory", "512m") \
+        .config("spark.sql.shuffle.partitions", "1") \
         .config("spark.hadoop.fs.s3a.access.key", AWS_ACCESS_KEY) \
         .config("spark.hadoop.fs.s3a.secret.key", AWS_SECRET_KEY) \
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
@@ -37,8 +38,8 @@ def main():
     # 처리할 날짜 계산
     target_date = datetime.now() - timedelta(days=1)
     target_year = target_date.year
-    target_month = target_date.month
-    target_day = target_date.day
+    target_month = f"{target_date.month:02d}"
+    target_day = f"{target_date.day:02d}"
 
     print(f"Processing data for: {target_year}-{target_month}-{target_day}")
 
@@ -55,19 +56,17 @@ def main():
         return
 
     # 2. 데이터 전처리 (시간 기준으로 조인하기)
-    # base_datetime (예: '202511142200')을 시간 단위로 통일
     power_hourly = power_df.withColumn(
         "hour_timestamp",
-        date_trunc("hour", col("base_datetime").cast(TimestampType()))
+        date_trunc("hour", to_timestamp(col("base_datetime"), "yyyyMMddHHmmss"))
     )
-    
     weather_hourly = weather_df.withColumn(
         "hour_timestamp",
-        date_trunc("hour", col("base_datetime").cast(TimestampType()))
+        date_trunc("hour", to_timestamp(col("base_datetime"), "yyyyMMddHHmm"))
     )
 
     # 3. 조인(Join)
-    joined_df = power_hourly.join(weather_hourly, "hour_timestamp", "inner")
+    joined_df = power_hourly.join(weather_hourly, "hour_timestamp", "left_outer")
 
     # 4. 분석 (시간대별 집계)
     analysis_df = joined_df.groupBy("hour_timestamp").agg(
