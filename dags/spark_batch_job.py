@@ -50,6 +50,10 @@ def main():
     try:
         power_df = spark.read.format("parquet").load(power_path)
         weather_df = spark.read.format("parquet").load(weather_path)
+
+        # 데이터 중복 제거
+        power_df = power_df.dropDuplicates(["base_datetime"])
+        weather_df = weather_df.dropDuplicates(["base_datetime"])
     except Exception as e:
         print(f"No data found for {target_date}. Skipping job.")
         spark.stop()
