@@ -77,3 +77,18 @@ def create_spark_session():
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{REGION}.amazonaws.com") \
         .getOrCreate()
 ```
+
+### 공공데이터 포털에서 제공하는 시간의 데이터 형태가 다르다.
+- 전력 데이터: "base_datetime": "20251122222500"
+- 날씨 데이터: "base_datetime": "202511221200"
+전력 데이터는 **yyyyMMddHHmmss**의 형태로 제공하지만, 날씨는 **yyyyMMddHHmm**의 형태로 제공한다.
+
+=> 특정 topic에 제한되지 않게 substring을 사용하였다.
+- 수정 파일: streaming_to_lake.py
+- 코드:
+```python
+partitioned_df = parsed_df \
+        .withColumn("year", substring(col("base_datetime"), 1, 4)) \
+        .withColumn("month", substring(col("base_datetime"), 5, 2)) \
+        .withColumn("day", substring(col("base_datetime"), 7, 2))
+```

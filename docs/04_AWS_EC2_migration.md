@@ -107,7 +107,7 @@ sudo chown -R 50000:0 dags logs plugins
 ### Python의 출력 버퍼링
 
 ```bash
-nohup python weather_producer.py > weather.log 2>&1 &
+nohup python -u weather_producer.py > weather.log 2>&1 &
 tail -f weather.log
 ```
 Python은 기본적으로 출력을 바로 파일에 쓰지 않고, 어느 정도 모았다가 한 번에 쓴다.(버퍼링) 그래서 프로그램은 잘 돌아가고 있어도, 로그 파일에는 아직 아무것도 안 찍힌 것처럼 보일 수 있다.
