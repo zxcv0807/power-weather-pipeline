@@ -1,0 +1,18 @@
+# --- Data Collection (Producers) ---
+# 전력/날씨 API 호출용
+requests>=2.31.0
+
+# Kafka 브로커 전송용
+kafka-python>=2.0.2
+
+# 환경변수(.env) 로드용
+python-dotenv>=1.0.0
+
+# --- Data Processing (Spark) ---
+# Spark 핵심 라이브러리 (버전 3.5.7 고정 필수)
+# 이유: Hadoop 3.3.x 및 S3A 커넥터 호환성 유지
+pyspark==3.5.7
+
+# --- Cloud Storage (AWS S3) ---
+# AWS S3 제어 및 연동용 (Airflow Dockerfile에서도 사용됨)
+boto3>=1.34.0
