@@ -75,7 +75,7 @@ def main():
     print(f"Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
 
     # 100회 트래픽 제한을 고려, 5분(300초)보다 길게 설정 (예: 15분)
-    WAIT_TIME_SECONDS = 900
+    WAIT_TIME_SECONDS = 1800
 
     try:
         while True:

@@ -107,8 +107,7 @@ def main():
     print(f"Starting producer for topic: {TOPIC_NAME}")
     print(f"Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
 
-    # 트래픽(10,000)이 넉넉하므로 10분(600초) 주기로 설정
-    WAIT_TIME_SECONDS = 600
+    WAIT_TIME_SECONDS = 3600
 
     try:
         while True:
