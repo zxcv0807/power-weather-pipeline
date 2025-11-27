@@ -9,6 +9,8 @@
   - Spark의 핵심 역할은 데이터를 처리하고 연산하는 것이다.
   - Kafka에서 데이터를 들고와서, 검증하고, 자르고, 붙이고, 다른 데이터와 합치는 등 복잡한 작업을 수행한다.
 
+=> Kafka는 실시간 데이터를 안전하게 모아두기 위해 사용하는 것이고, Spark는 그 데이터를 가져와서 처리하기 위해 사용하는 것이다.
+
 ## Kafka Streams vs Spark Streaming
 
 - Kafka Streams
