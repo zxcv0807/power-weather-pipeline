@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
+from utils.slack_alert import on_failure_callback
 
 # DAG 기본 설정
 default_args = {
@@ -11,6 +12,7 @@ default_args = {
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
+    'on_failure_callback': on_failure_callback,
 }
 
 # DAG 정의
