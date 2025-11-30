@@ -22,7 +22,7 @@ def on_failure_callback(context):
     # http_conn_id는 Airflow의 Connection에서 저장한 Connection Id와 같아야 한다.
     operator = SlackWebhookOperator(
         task_id='slack_alert',
-        http_conn_id='slack_conn',
+        slack_webhook_conn_id='slack_conn',
         message=message,
     )
 
