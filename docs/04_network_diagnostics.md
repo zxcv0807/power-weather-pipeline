@@ -55,6 +55,9 @@ traceroute to openapi.kpx.or.kr (211.179.209.205), 30 hops max, 60 byte packets
 30  * * *
 ```
 Hop 1~9는 정상적으로 패킷이 이동했지만, 10부터 패킷이 실종되었다. TCP SYN Drop 현상으로써, 패킷을 계속 Drop하는 것이다.
+1. 서버가 꺼져있다면, 보통 즉시 에러 메시지가 뜨게 된다.(Destination Host Unreachable 등)
+2. 포트가 닫혀있다면, 서버가 즉시 RST(Reset) 패킷을 보낸다.
+3. 방화벽이 차단되었다면, 아무 반응이 없다.(Time out)
 
 - 탄력적 IP 할당을 통해 AWS 대역 차단 확인
 EC2 인스턴스에 새로운 탄력적 IP를 할당하여 내IP가 차단된 것인지, 아니면 AWS 대역을 차단하고 있는것인지 확인한다.
