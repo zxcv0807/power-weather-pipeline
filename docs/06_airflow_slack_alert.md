@@ -41,7 +41,7 @@ Slack URL은 민감한 정보이므로 코드에 직접 적지 않고, **Airflow
 4. 다음과 같이 입력
   - Connection Id: slack_conn
   - Connection Type: HTTP
-  - Host: https://hooks.slack.com/services/... (아까 복사해둔 URL)
+  - Host: https://hooks.slack.com/services/... (아까 복사해둔 URL) => Trouble Shooting 확인
 5. Save
 
 ## 4단계: 알림 함수 작성(dags/utils/slack_alert.py)
@@ -133,3 +133,4 @@ Airflow는 이 둘을 합쳐서 요청을 보낸다. 그래서 Host에는 앞부
   - Connection 구성을 분리한다.
   - Host: https://hooks.slack.com/services/
   - Password: Host의 뒷부분
+  
