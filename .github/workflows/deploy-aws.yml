@@ -10,6 +10,7 @@ on:
       - 'docker-compose.yml'
       - 'Dockerfile.airflow'
       - 'requirements.txt'
+      - '.github/workflows/deploy-aws.yml'
 
 jobs:
   deploy:
