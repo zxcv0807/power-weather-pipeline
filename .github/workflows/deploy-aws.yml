@@ -13,35 +13,36 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, aws-ec2]
+    
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USERNAME }}
-          key: ${{ secrets.AWS_KEY }}
-          port: 22
-          script: |
-            cd power-weather-pipeline
-            
-            # 1. 최신 코드 받기
-            git pull origin main
-            
-            # 2. Docker 컨테이너 재배포 (변경된 게 있으면 빌드, 없으면 스킵됨)
-            docker compose up --build -d
-            
-            # 3. 파이썬 가상환경 업데이트
-            source venv/bin/activate
-            pip install -r requirements.txt
-            
-            # 4. 백그라운드 스크립트 재시작
-            # (1) Weather Producer
-            pkill -f weather_producer.py || true
-            nohup python -u collectors/weather/weather_producer.py >> weather.log 2>&1 &
-            
-            # (2) Spark Streaming
-            pkill -f streaming_to_lake.py || true
-            nohup python -u spark/streaming_to_lake.py >> stream.log 2>&1 &
-            
-            echo "AWS EC2 Deployment Completed!"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy AWS Pipeline
+        run: |
+          # AWS EC2의 기존 프로젝트 경로로 이동
+          cd /home/power-weather-pipeline
+          
+          # 1. 최신 코드 받기
+          git pull origin main
+          
+          # 2. Docker 재배포
+          # (중요: Airflow 권한 문제 방지를 위해 down -> chown -> up 순서 권장)
+          docker compose down
+          sudo chown -R 50000:0 dags logs plugins
+          docker compose up --build -d
+          
+          # 3. Python 가상환경 업데이트
+          source venv/bin/activate
+          pip install -r requirements.txt
+          
+          # 4. Weather Producer 재시작
+          pkill -f weather_producer.py || true
+          nohup python -u collectors/weather/weather_producer.py >> weather.log 2>&1 &
+          
+          # 5. Spark Streaming 재시작
+          pkill -f streaming_to_lake.py || true
+          nohup python -u spark/streaming_to_lake.py >> stream.log 2>&1 &
+          
+          echo "✅ AWS EC2 Deployment Completed!"
