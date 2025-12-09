@@ -10,8 +10,8 @@ import xml.etree.ElementTree as ET
 load_dotenv()
 
 SERVICE_KEY = os.getenv("POWER_API_KEY")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 API_URL = "https://openapi.kpx.or.kr/openapi/sukub5mMaxDatetime/getSukub5mMaxDatetime"
-KAFKA_BOOTSTRAP_SERVERS = ['localhost:9092']
 TOPIC_NAME = 'power_demand_realtime'
 
 # Kafka Producer 생성 (JSON 직렬화 설정)
